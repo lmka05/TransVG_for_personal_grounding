@@ -6,7 +6,9 @@ import torch
 
 from config import Config
 from models import build_model
-from datasets import build_val_loader
+from torch.utils.data import DataLoader
+from datasets.dataset import CustomGroundingDataset
+from utils.misc import collate_fn
 from evaluate import evaluate
 
 
@@ -14,8 +16,7 @@ def main():
     parser = argparse.ArgumentParser(description='TransVG — Test')
     parser.add_argument('--checkpoint', type=str, required=True,
                         help='Đường dẫn tới file checkpoint (.pth)')
-    parser.add_argument('--splits', nargs='+', default=['val', 'testA', 'testB'],
-                        help='Các split cần đánh giá (mặc định: val testA testB)')
+    parser.add_argument('--splits', nargs='+', default=['dev', 'test'])
     args = parser.parse_args()
 
     config = Config
@@ -46,7 +47,19 @@ def main():
     for split in args.splits:
         print(f"Evaluating on [{split}]")
         try:
-            loader = build_val_loader(config, split=split)
+            ann_map = {'dev': config.ann_dev, 'test': config.ann_test}
+            if split not in ann_map:
+                print(f"Split '{split}' không được hỗ trợ.")
+                continue
+            dataset = CustomGroundingDataset(ann_map[split], config.img_dir, split, config)
+            loader = DataLoader(
+                dataset,
+                batch_size=config.batch_size,
+                shuffle=False,
+                num_workers=config.num_workers,
+                collate_fn=collate_fn,
+                drop_last=False,
+            )
             acc, avg_iou = evaluate(model, loader, device, desc=split)
             results[split] = {'accuracy': acc, 'avg_iou': avg_iou}
         except KeyError:

@@ -14,6 +14,7 @@ from config import Config
 from models import build_model
 from torch.utils.data import DataLoader
 from datasets.dataset import CustomGroundingDataset
+from datasets.dataloader import build_dataloader
 from utils.misc import collate_fn
 from evaluate import trans_vg_loss, evaluate
 
@@ -193,25 +194,9 @@ def main():
     # build dataloaders
     print("Creating datasets")
     train_dataset = CustomGroundingDataset(config.ann_train, config.img_dir, 'train', config)
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=config.batch_size,
-        shuffle=True,
-        num_workers=config.num_workers,
-        collate_fn=collate_fn,
-        drop_last=True,
-        persistent_workers=(config.num_workers > 0),
-    )
+    train_loader = build_dataloader(train_dataset, config.batch_size, True, config.num_workers)
     val_dataset = CustomGroundingDataset(config.ann_dev, config.img_dir, 'dev', config)
-    val_loader = DataLoader(
-        val_dataset,
-        batch_size=config.batch_size,
-        shuffle=False,
-        num_workers=config.num_workers,
-        collate_fn=collate_fn,
-        drop_last=False,
-        persistent_workers=(config.num_workers > 0),
-    )
+    val_loader = build_dataloader(val_dataset, config.batch_size, False, config.num_workers)
 
     # Resume from checkpoint
     start_epoch = 0

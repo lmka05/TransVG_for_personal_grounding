@@ -1,27 +1,6 @@
-# ==============================================================================
-# image_transforms.py — Data Augmentation Pipeline cho TransVG (Tiếng Việt)
-# ==============================================================================
-# Sử dụng Albumentations cho color augmentation (ColorJitter, GaussianBlur).
-# Viết tay phần geometric transforms + text-aware logic (flip swap "trái"↔"phải",
-# tránh crop khi câu chứa từ chỉ hướng).
-#
-# Pipeline Training:
-#   RandomSelect(
-#       RandomResize(multi-scale),           ← chỉ resize
-#       RandomResize + RandomCrop + RandomResize  ← resize + crop + resize
-#   )
-#   → ColorJitter + GaussianBlur            ← Albumentations
-#   → RandomHorizontalFlip                  ← viết tay (swap trái↔phải)
-#   → Normalize + Pad (640×640) + Mask      ← viết tay
-#
-# Pipeline Val/Test:
-#   RandomResize([imsize])
-#   → Normalize + Pad + Mask
-# ==============================================================================
-
-import random
 import numpy as np
 import torch
+import random
 from PIL import Image
 
 import albumentations as A
@@ -366,10 +345,6 @@ class ImageTransform:
         return img, bbox
 
 
-# ==============================================================================
-# Factory function
-# ==============================================================================
-
 def make_transforms(config, split):
     """Tạo transform pipeline phù hợp với split (train/val/test)."""
     return ImageTransform(config, split)
@@ -413,7 +388,7 @@ if __name__ == "__main__":
     class MockConfig:
         imsize = 640
 
-    transform = TransVGTransform(MockConfig, 'val')
+    transform = ImageTransform(MockConfig, 'val')
     pil_img = Image.fromarray(img)
     img_t, mask_t, bbox_t, text_t = transform(pil_img, [100, 50, 300, 250], "con mèo")
     print(f"img_tensor: {img_t.shape}, dtype={img_t.dtype}")
@@ -422,7 +397,7 @@ if __name__ == "__main__":
     print(f"text:       '{text_t}'")
 
     print("\n--- Test full pipeline (train) ---")
-    transform_train = TransVGTransform(MockConfig, 'train')
+    transform_train = ImageTransform(MockConfig, 'train')
     img_t2, mask_t2, bbox_t2, text_t2 = transform_train(
         pil_img, [100, 50, 300, 250], "người bên trái"
     )

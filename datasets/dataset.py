@@ -51,7 +51,11 @@ class CustomGroundingDataset(Dataset):
 
             for bbox_item in bbox_list:
                 # Handle cả 2 key "points" hoặc "coordinates" ở cấp độ bbox
-                points = bbox_item.get('points', bbox_item.get('coordinates'))
+                try:
+                    points = bbox_item.get('points', bbox_item.get('coordinates'))
+                except:
+                    print("gặp lỗi ở item ", filename)
+                    raise
                 if points is None:
                     continue
 

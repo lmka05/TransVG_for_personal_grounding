@@ -46,20 +46,34 @@ class CustomGroundingDataset(Dataset):
         for img_id, img_info in data.items():
             filename = img_info['filename']
 
-            # Handle cả 2 key: "bboxes" hoặc "coordinates" 
+            # Handle cả 2 key: "bboxes" hoặc "coordinates" ở cấp độ ảnh
             bbox_list = img_info.get('bboxes', img_info.get('coordinates', []))
 
             for bbox_item in bbox_list:
-                # Handle cả 2 key "points" hoặc "coordinates" 
+                # Handle cả 2 key "points" hoặc "coordinates" ở cấp độ bbox
                 points = bbox_item.get('points', bbox_item.get('coordinates'))
-                descriptions = bbox_item['description']
+                if points is None:
+                    continue
 
-                # Chuyển 4 điểm góc → [x1, y1, x2, y2]
-                # Dùng min/max để xử lý mọi thứ tự điểm
-                xs = [p[0] for p in points]
-                ys = [p[1] for p in points]
-                x1, y1 = min(xs), min(ys)
-                x2, y2 = max(xs), max(ys)
+                # Chuẩn hóa points thành tọa độ [x1, y1, x2, y2]
+                if len(points) == 4 and not isinstance(points[0], (list, tuple)):
+                    # Trường hợp points là flat list: [x1, y1, x2, y2]
+                    x1, y1, x2, y2 = points
+                elif len(points) >= 2:
+                    # Trường hợp points là list of [x, y] (ví dụ: [[x1, y1], [x2, y2]] hoặc 4 điểm góc)
+                    xs = [p[0] for p in points]
+                    ys = [p[1] for p in points]
+                    x1, y1 = min(xs), min(ys)
+                    x2, y2 = max(xs), max(ys)
+                else:
+                    print("gặp lỗi ở item ", filename)
+                    continue
+
+                # Handle cả 2 key "description" hoặc "descriptions"
+                descriptions = bbox_item.get('description', bbox_item.get('descriptions', []))
+                # Nếu descriptions là single string, chuyển thành list của 1 string để chọn ngẫu nhiên
+                if isinstance(descriptions, str):
+                    descriptions = [descriptions]
 
                 self.samples.append({
                     'filename': filename,

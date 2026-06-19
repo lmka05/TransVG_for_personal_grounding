@@ -46,11 +46,12 @@ class CustomGroundingDataset(Dataset):
         for img_id, img_info in data.items():
             filename = img_info['filename']
 
-            # Handle cả 2 key: "bboxes" hoặc "coordinates"
+            # Handle cả 2 key: "bboxes" hoặc "coordinates" 
             bbox_list = img_info.get('bboxes', img_info.get('coordinates', []))
 
             for bbox_item in bbox_list:
-                points = bbox_item['points']
+                # Handle cả 2 key "points" hoặc "coordinates" 
+                points = bbox_item.get('points', bbox_item.get('coordinates'))
                 descriptions = bbox_item['description']
 
                 # Chuyển 4 điểm góc → [x1, y1, x2, y2]

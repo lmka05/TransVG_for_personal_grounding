@@ -36,9 +36,7 @@ class CustomGroundingDataset(Dataset):
         self.img_dir = img_dir
         self.split = split
 
-        # =====================================================================
         # Load annotations + Flatten thành danh sách samples
-        # =====================================================================
         with open(ann_file, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
@@ -78,7 +76,11 @@ class CustomGroundingDataset(Dataset):
                 # Nếu descriptions là single string, chuyển thành list của 1 string để chọn ngẫu nhiên
                 if isinstance(descriptions, str):
                     descriptions = [descriptions]
-
+                
+                text = descriptions[0]
+                if len(text) == 0:
+                    continue
+                
                 self.samples.append({
                     'filename': filename,
                     'bbox_xyxy': [x1, y1, x2, y2],
@@ -87,9 +89,7 @@ class CustomGroundingDataset(Dataset):
 
         print(f"[{split}] Loaded {len(self.samples)} samples from {len(data)} images")
 
-        # =====================================================================
         # Image transform: train có augmentation, dev/test thì không
-        # =====================================================================
         aug_split = 'train' if split == 'train' else 'val'
         self.img_transform = make_transforms(config, aug_split)
 
@@ -105,37 +105,27 @@ class CustomGroundingDataset(Dataset):
     def __getitem__(self, index):
         sample = self.samples[index]
 
-        # =====================================================================
-        # Bước 1: Load ảnh (PIL Image)
-        # =====================================================================
+        # Load ảnh (PIL Image)
         img_path = os.path.join(self.img_dir, sample['filename'])
         pil_img = Image.open(img_path).convert('RGB')
 
-        # =====================================================================
-        # Bước 2: Lấy text expression
-        # =====================================================================
+        # Lấy text expression
         descriptions = sample['descriptions']
         if self.split == 'train':
             expression = random.choice(descriptions)
         else:
             expression = descriptions[0]
 
-        # =====================================================================
-        # Bước 3: Lấy bbox [x1, y1, x2, y2]
-        # =====================================================================
+        # Lấy bbox [x1, y1, x2, y2]
         bbox_xyxy = sample['bbox_xyxy']
 
-        # =====================================================================
-        # Bước 4: Image transform (augment + normalize + pad + mask)
-        # =====================================================================
+        # Image transform (augment + normalize + pad + mask)
         # Text có thể bị swap "trái"↔"phải" nếu ảnh bị flip
         img, img_mask, bbox, expression = self.img_transform(
             pil_img, bbox_xyxy, expression
         )
 
-        # =====================================================================
-        # Bước 5: Text transform (tokenize cho PhoBERT)
-        # =====================================================================
+        # Text transform (tokenize cho PhoBERT)
         input_ids, attention_mask = self.text_transform(expression)
         word_id = torch.tensor(input_ids, dtype=torch.long)
         word_mask = torch.tensor(attention_mask, dtype=torch.long)

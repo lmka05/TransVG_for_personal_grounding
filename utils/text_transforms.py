@@ -16,7 +16,7 @@ class TextTransform:
         Mask:   [1,   1,    1,    1,    1,    1,    1,   0, 0, ...]
     """
 
-    def __init__(self, bert_model="vinai/phobert-base", max_query_len=15):
+    def __init__(self, bert_model="", max_query_len=15):
         """
         Args:
             bert_model (str): Tên model BERT trên HuggingFace
@@ -40,12 +40,6 @@ class TextTransform:
             input_ids (list[int]): [max_len] — token IDs
             attention_mask (list[int]): [max_len] — 1 cho token thật, 0 cho PAD
         """
-        #   1. Lowercase (vì bert-base-uncased)
-        #   2. Tokenize bằng WordPiece
-        #   3. Thêm [CLS] ở đầu, [SEP] ở cuối
-        #   4. Pad hoặc cắt về max_length
-        if ViTokenizer is not None:
-            text = ViTokenizer.tokenize(text)
 
         encoded = self.tokenizer(
             text,

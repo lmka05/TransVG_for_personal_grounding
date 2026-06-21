@@ -1,12 +1,12 @@
 class Config:
-    img_dir = "/kaggle/input/datasets/jeffaudi/coco-2014-dataset-for-yolov3/coco2014/images/train2014"
+    img_dir = ""
     ann_train = "/path/to/train.json"
     ann_dev = "/path/to/dev.json"
     ann_test = "/path/to/test.json"
-    detr_model = "/kaggle/input/datasets/minhkhoai/detr-pretrained/detr-r50-e632da11.pth"
+    detr_model = ""
     # Kích thước đầu vào
     imsize = 640            
-    max_query_len = 15       # Số từ tối đa trong câu (không tính [CLS], [SEP])
+    max_query_len = 25     
 
     # Visual backbone
     backbone = "resnet50"
@@ -19,8 +19,9 @@ class Config:
     detr_enc_num = 6         # Số encoder layers trong DETR
     position_embedding = "sine"  # Loại positional encoding ("sine" = sin/cos, không cần train)
 
-    # bert
-    bert_model = "vinai/phobert-base"
+    # Language model (Monosyllabic / Space-separated Vietnamese)
+    # Các lựa chọn khác: "xlm-roberta-base" hoặc "bert-base-multilingual-cased"
+    bert_model = "uitnlp/CafeBERT"
     bert_enc_num = 12        # Dùng output layer thứ 12
 
     # VL Transformer
@@ -31,16 +32,16 @@ class Config:
     vl_dropout = 0.1
 
     # 6. TRAINING
-    optimizer = "adamw"      # Optimizer (chỉ dùng AdamW)
-    lr          = 1.25e-5    # LR cho VL Transformer + MLP  (1e-4  × 8/64)
-    lr_bert     = 1.25e-6    # LR cho BERT                  (1e-5  × 8/64)
-    lr_visu_cnn = 1.25e-6    # LR cho ResNet backbone        (1e-5  × 8/64)
-    lr_visu_tra = 1.25e-6    # LR cho DETR Encoder           (1e-5  × 8/64)
+    optimizer = "adamw"      
+    lr          = 1.25e-5    # LR cho VL Transformer + MLP  
+    lr_bert     = 1.25e-6    # LR cho BERT                  
+    lr_visu_cnn = 1.25e-6    # LR cho ResNet backbone        
+    lr_visu_tra = 1.25e-6    # LR cho DETR Encoder           
     weight_decay = 1e-4
     batch_size = 8
     epochs = 30
     lr_scheduler = "step"    # "step", "cosine" 
-    lr_drop = 60             # Epoch giảm lr (cho step scheduler)
+    lr_drop = 60             
     clip_max_norm = 0.15     # Gradient clipping
 
     # 7. LOGGING & CHECKPOINT

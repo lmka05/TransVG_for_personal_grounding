@@ -35,9 +35,6 @@ def swap_directional_words(text):
     """
     Swap trái↔phải trong text khi ảnh bị lật ngang.
 
-    Dùng placeholder để tránh double-swap:
-        "bên trái" → placeholder_A → "bên phải"
-        "bên phải" → placeholder_B → "bên trái"
     """
     for i, (w1, w2) in enumerate(SWAP_PAIRS):
         text = text.replace(w1, f"__PH_{i}_A__")
@@ -51,7 +48,7 @@ def swap_directional_words(text):
 
 
 # ==============================================================================
-# 2. Geometric transforms (viết tay — cần cập nhật bbox đồng bộ)
+# 2. Geometric transforms 
 # ==============================================================================
 
 def resize_long_side(img, bbox, target_size):
@@ -162,7 +159,7 @@ def horizontal_flip(img, bbox):
 
 
 # ==============================================================================
-# 3. Color augmentation (Albumentations)
+# 3. Color augmentation 
 # ==============================================================================
 
 def build_color_augmentation():
@@ -208,21 +205,17 @@ def normalize_pad_to_tensor(img, bbox, target_size):
     """
     h, w = img.shape[:2]
 
-    # --- Normalize (ImageNet mean/std) ---
     img = img.astype(np.float32) / 255.0
     mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
     std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
     img = (img - mean) / std
 
-    # --- Pad về hình vuông (góc trên-trái) ---
     padded = np.zeros((target_size, target_size, 3), dtype=np.float32)
     padded[:h, :w, :] = img
 
-    # --- Tạo mask: True = padding, False = pixel thật ---
     mask = torch.ones(target_size, target_size, dtype=torch.bool)
     mask[:h, :w] = False
 
-    # --- Chuyển bbox [x1,y1,x2,y2] → normalized [cx,cy,w,h] ---
     x1, y1, x2, y2 = bbox
     cx = np.clip((x1 + x2) / 2.0 / target_size, 0, 1)
     cy = np.clip((y1 + y2) / 2.0 / target_size, 0, 1)
@@ -230,7 +223,6 @@ def normalize_pad_to_tensor(img, bbox, target_size):
     bh = np.clip((y2 - y1) / target_size, 0, 1)
     bbox_norm = torch.tensor([cx, cy, bw, bh], dtype=torch.float32)
 
-    # --- To Tensor [C, H, W] ---
     img_tensor = torch.from_numpy(
         np.ascontiguousarray(np.transpose(padded, (2, 0, 1)))
     )
@@ -239,7 +231,7 @@ def normalize_pad_to_tensor(img, bbox, target_size):
 
 
 # ==============================================================================
-# 5. TransVGTransform — class chính gộp toàn bộ pipeline
+# 5. TransVGTransform 
 # ==============================================================================
 
 class ImageTransform:
@@ -273,7 +265,7 @@ class ImageTransform:
             self.crop_max_size = 600
             self.crop_prob = 0.5                  # xác suất chọn nhánh crop
 
-            # Color augmentation (Albumentations)
+            # Color augmentation
             self.color_aug = build_color_augmentation()
 
     def __call__(self, img_pil, bbox_xyxy, text):
@@ -307,7 +299,6 @@ class ImageTransform:
     def _train_transform(self, img, bbox, text):
         """Pipeline augmentation cho training."""
 
-        # --- Bước 1: RandomSelect (resize hoặc resize+crop+resize) ---
         use_crop = (
             not has_directional_words(text)
             and random.random() < self.crop_prob
@@ -329,10 +320,8 @@ class ImageTransform:
             size = random.choice(self.scales)
             img, bbox = resize_long_side(img, bbox, size)
 
-        # --- Bước 2: Color augmentation (Albumentations) ---
         img = self.color_aug(image=img)['image']
 
-        # --- Bước 3: Random horizontal flip (50%) ---
         if random.random() < 0.5:
             img, bbox = horizontal_flip(img, bbox)
             text = swap_directional_words(text)

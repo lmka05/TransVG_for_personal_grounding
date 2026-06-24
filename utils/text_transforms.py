@@ -8,12 +8,6 @@ class TextTransform:
     BERT cần 2 tensor:
         - input_ids:      [max_len] — chỉ số token trong vocab BERT
         - attention_mask:  [max_len] — 1 = token thật, 0 = padding
-
-    Ví dụ (max_query_len=15, max_len=17):
-        Input:  "the man in red shirt"
-        Output: [CLS] the man in red shirt [SEP] [PAD] [PAD] ...
-        IDs:    [101, 1996, 2158, 1999, 2417, 6399, 102, 0, 0, ...]
-        Mask:   [1,   1,    1,    1,    1,    1,    1,   0, 0, ...]
     """
 
     def __init__(self, bert_model="", max_query_len=15):
@@ -33,12 +27,6 @@ class TextTransform:
         """
         Tokenize 1 câu text.
 
-        Args:
-            text (str): Câu mô tả, ví dụ "the man in red shirt"
-
-        Returns:
-            input_ids (list[int]): [max_len] — token IDs
-            attention_mask (list[int]): [max_len] — 1 cho token thật, 0 cho PAD
         """
 
         encoded = self.tokenizer(
@@ -57,13 +45,7 @@ class TextTransform:
 
     def decode(self, input_ids):
         """
-        Chuyển input_ids ngược lại thành text (debug/visualization).
-
-        Args:
-            input_ids (list[int]): Token IDs
-
-        Returns:
-            str: Text đã decode
+        Chuyển input_ids ngược lại thành text
         """
         return self.tokenizer.decode(input_ids, skip_special_tokens=True)
 

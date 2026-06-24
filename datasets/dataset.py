@@ -14,13 +14,6 @@ class CustomGroundingDataset(Dataset):
     """
     Mỗi sample = 1 cặp (ảnh + bbox + câu mô tả).
     Một ảnh có thể có nhiều bbox → tạo ra nhiều samples.
-
-    Returns (mỗi sample):
-        img:       Tensor [3, imsize, imsize]  — ảnh đã augment + normalize + pad
-        img_mask:  Tensor [imsize, imsize]     — True=padding, False=pixel thật
-        word_id:   Tensor [max_query_len+2]    — token IDs (PhoBERT)
-        word_mask: Tensor [max_query_len+2]    — 1=token thật, 0=padding
-        bbox:      Tensor [4]                  — normalized [cx, cy, w, h] ∈ [0,1]
     """
 
     def __init__(self, ann_file, img_dir, split, config):

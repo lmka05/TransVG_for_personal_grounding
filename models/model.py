@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from utils.misc import NestedTensor
 
 from .backbone import build_visual_encoder
 from .language import build_bert_encoder
@@ -54,7 +55,6 @@ class TransVG(nn.Module):
 
     def forward(self, img_tensors, img_mask, word_ids, word_mask):
         bs = img_tensors.shape[0]
-        from utils.misc import NestedTensor
         img_data = NestedTensor(img_tensors, img_mask)
         text_data = NestedTensor(word_ids, word_mask)
         visu_mask, visu_src = self.visumodel(img_data)
